@@ -4,7 +4,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { findProjectRoot, execCommandInteractive } from '../utils/index.js';
+import { execCommandInteractive, resolveProjectPath, ProjectPathOptions } from '../utils/index.js';
 
 interface ModuleConfig {
   path: string;
@@ -15,7 +15,7 @@ interface ModulesConfig {
   [key: string]: ModuleConfig;
 }
 
-interface ModulesOptions {
+interface ModulesOptions extends ProjectPathOptions {
   status?: boolean;
   enable?: string;
   disable?: string;
@@ -360,13 +360,9 @@ async function interactiveMode(projectRoot: string): Promise<void> {
 }
 
 async function modulesAction(options: ModulesOptions): Promise<void> {
-  const projectRoot = findProjectRoot();
-  if (!projectRoot) {
-    console.error(chalk.red('❌ Not in a React Native project directory'));
-    process.exit(1);
-  }
-
-  const modulesConfig = getModulesConfig(projectRoot);
+  try {
+    const projectRoot = resolveProjectPath(options);
+    const modulesConfig = getModulesConfig(projectRoot);
 
   if (options.status) {
     showModuleStatus(projectRoot);
@@ -389,8 +385,13 @@ async function modulesAction(options: ModulesOptions): Promise<void> {
     return;
   }
 
-  // Interactive mode
-  await interactiveMode(projectRoot);
+    // Interactive mode
+    await interactiveMode(projectRoot);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(chalk.red(`❌ ${errorMessage}`));
+    process.exit(1);
+  }
 }
 
 export const modulesCommand = new Command('modules')
@@ -398,4 +399,5 @@ export const modulesCommand = new Command('modules')
   .option('-s, --status', 'Show module status')
   .option('-e, --enable <module>', 'Enable a specific module or "all"')
   .option('-d, --disable <module>', 'Disable a specific module or "all"')
+  .option('--destination <path>', 'Project directory path')
   .action(modulesAction);

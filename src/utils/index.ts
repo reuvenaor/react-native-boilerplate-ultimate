@@ -152,3 +152,48 @@ export function replaceTemplateVariables(
 
   return result;
 }
+
+// Common interface for commands that accept project path
+export interface ProjectPathOptions {
+  destination?: string;
+}
+
+// Common function to resolve and validate project path
+export function resolveProjectPath(options: ProjectPathOptions): string {
+  let projectPath: string;
+
+  if (options.destination) {
+    // If destination is provided, resolve it to absolute path
+    projectPath = path.resolve(options.destination);
+    
+    // Validate that the destination is a React Native project
+    const packageJsonPath = path.join(projectPath, 'package.json');
+    if (!fs.existsSync(packageJsonPath)) {
+      throw new Error(`No package.json found at: ${projectPath}`);
+    }
+
+    try {
+      const packageJson = fs.readJsonSync(packageJsonPath);
+      if (
+        !packageJson.dependencies?.['react-native'] &&
+        !packageJson.devDependencies?.['react-native']
+      ) {
+        throw new Error(`Not a React Native project: ${projectPath}`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(`Failed to read package.json at: ${projectPath}`);
+    }
+  } else {
+    // If no destination provided, find project root from current directory
+    const foundRoot = findProjectRoot();
+    if (!foundRoot) {
+      throw new Error('Not in a React Native project directory. Use --destination to specify project path.');
+    }
+    projectPath = foundRoot;
+  }
+
+  return projectPath;
+}

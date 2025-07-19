@@ -43,6 +43,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate modules
 - `-s, --status` - Show module status
 - `-e, --enable <module>` - Enable a specific module or "all"
 - `-d, --disable <module>` - Disable a specific module or "all"
+- `--destination <path>` - Project directory path
 
 **Available Modules:**
 
@@ -56,6 +57,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate modules
 npx @reuvenorg/react-native-boilerplate-ultimate modules --status
 npx @reuvenorg/react-native-boilerplate-ultimate modules --enable md-chat-ai-screen
 npx @reuvenorg/react-native-boilerplate-ultimate modules --disable all
+npx @reuvenorg/react-native-boilerplate-ultimate modules --status --destination ~/Projects/MyApp
 ```
 
 ### `icons` - Generate Icons
@@ -73,6 +75,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate icons
 - `--splash` - Generate splash screens only
 - `--primary <color>` - Primary color (default: #1976D2)
 - `--background <color>` - Background color (default: #FFFFFF)
+- `--destination <path>` - Project directory path
 
 **Prerequisites:**
 The target project must have the `canvas` package installed:
@@ -87,6 +90,7 @@ npm install canvas --save-dev
 npx @reuvenorg/react-native-boilerplate-ultimate icons --primary "#FF6B6B" --background "#FFFFFF"
 npx @reuvenorg/react-native-boilerplate-ultimate icons --android
 npx @reuvenorg/react-native-boilerplate-ultimate icons --splash
+npx @reuvenorg/react-native-boilerplate-ultimate icons --primary "#2196F3" --destination /path/to/project
 ```
 
 ### `refresh` - Refresh Project
@@ -102,6 +106,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate refresh
 - `-w, --watchman` - Clear watchman watches only
 - `-m, --modules` - Clean and reinstall node modules only
 - `-s, --start` - Start with cache reset only
+- `--destination <path>` - Project directory path
 
 **Examples:**
 
@@ -109,6 +114,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate refresh
 npx @reuvenorg/react-native-boilerplate-ultimate refresh --watchman
 npx @reuvenorg/react-native-boilerplate-ultimate refresh --modules
 npx @reuvenorg/react-native-boilerplate-ultimate refresh  # Full refresh
+npx @reuvenorg/react-native-boilerplate-ultimate refresh --modules --destination ~/MyProject
 ```
 
 ### `devices` - List Devices
@@ -124,6 +130,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate devices
 - `-d, --details` - Show detailed device information
 - `-a, --android` - Show Android devices only
 - `-i, --ios` - Show iOS devices only
+- `--destination <path>` - Project directory path (optional for devices command)
 
 **Prerequisites:**
 

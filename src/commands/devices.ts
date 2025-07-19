@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { execCommand } from '../utils/index.js';
+import { execCommand, ProjectPathOptions } from '../utils/index.js';
 
 interface DeviceInfo {
   id: string;
@@ -306,7 +306,7 @@ function printIOSDevices(
   }
 }
 
-interface DevicesOptions {
+interface DevicesOptions extends ProjectPathOptions {
   details?: boolean;
   android?: boolean;
   ios?: boolean;
@@ -349,4 +349,5 @@ export const devicesCommand = new Command('devices')
   .option('-d, --details', 'Show detailed device information')
   .option('-a, --android', 'Show Android devices only')
   .option('-i, --ios', 'Show iOS devices only')
+  .option('--destination <path>', 'Project directory path (optional for devices command)')
   .action(devicesAction);
