@@ -1,0 +1,45 @@
+# Source files
+src/
+tsconfig.json
+
+# Development files
+.git/
+.gitignore
+CLAUDE.md
+README-DEV.md
+
+# Test files
+tmp/
+__tests__/
+*.test.ts
+*.test.js
+
+# Build artifacts
+node_modules/
+*.log
+*.tgz
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development configs
+.eslintrc*
+.prettierrc*
+jest.config.*
+
+tmp/
+
+# Keep only what's needed
+!dist/
+!templates/
+!README.md
+!LICENSE
+!package.json
+
