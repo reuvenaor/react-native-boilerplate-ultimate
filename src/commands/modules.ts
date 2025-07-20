@@ -1,10 +1,25 @@
 import { Command } from 'commander';
-import fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { execCommandInteractive, resolveProjectPath, ProjectPathOptions } from '../utils/index.js';
+import {
+  execCommandInteractive,
+  resolveProjectPath,
+  ProjectPathOptions,
+  getProjectInfo,
+  getErrorMessage,
+  readPackageJson,
+  logInfo,
+  logSuccess,
+  logError,
+  logWarning,
+  logGray,
+  logHeader,
+  successMessage,
+  failMessage,
+  warningMessage,
+} from '../utils/index.js';
 
 interface ModuleConfig {
   path: string;
@@ -42,8 +57,7 @@ function getModulesConfig(projectRoot: string): ModulesConfig {
 
 function isModuleLinked(moduleName: string, projectRoot: string): boolean {
   try {
-    const packageJsonPath = path.join(projectRoot, 'package.json');
-    const packageJson = fs.readJsonSync(packageJsonPath);
+    const packageJson = readPackageJson(projectRoot);
     return !!(packageJson.dependencies && packageJson.dependencies[moduleName]);
   } catch {
     return false;
@@ -56,31 +70,31 @@ function linkModule(
   projectRoot: string
 ): void {
   try {
-    console.log(chalk.blue(`Linking module: ${moduleName}...`));
+    logInfo(`Linking module: ${moduleName}...`);
     execCommandInteractive(
       `npm install ${moduleConfig.path} --save --legacy-peer-deps`,
       projectRoot
     );
-    console.log(chalk.green(`Module ${moduleName} linked successfully.`));
+    logSuccess(`Module ${moduleName} linked successfully.`);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    throw new Error(`Error linking module ${moduleName}: ${errorMessage}`);
+    throw new Error(
+      `Error linking module ${moduleName}: ${getErrorMessage(error)}`
+    );
   }
 }
 
 function unlinkModule(moduleName: string, projectRoot: string): void {
   try {
-    console.log(chalk.blue(`Unlinking module: ${moduleName}...`));
+    logInfo(`Unlinking module: ${moduleName}...`);
     execCommandInteractive(
       `npm uninstall ${moduleName} --save --legacy-peer-deps`,
       projectRoot
     );
-    console.log(chalk.green(`Module ${moduleName} unlinked successfully.`));
+    logSuccess(`Module ${moduleName} unlinked successfully.`);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    throw new Error(`Error unlinking module ${moduleName}: ${errorMessage}`);
+    throw new Error(
+      `Error unlinking module ${moduleName}: ${getErrorMessage(error)}`
+    );
   }
 }
 
@@ -94,41 +108,33 @@ function installDependencies(
   }
 
   try {
-    console.log(chalk.blue(`Installing dependencies for ${moduleName}...`));
+    logInfo(`Installing dependencies for ${moduleName}...`);
     for (const dep of moduleConfig.dependencies) {
-      console.log(chalk.gray(`Installing ${dep}...`));
+      logGray(`Installing ${dep}...`);
       execCommandInteractive(
         `npm install ${dep} --save --legacy-peer-deps`,
         projectRoot
       );
     }
-    console.log(
-      chalk.green(`Dependencies for ${moduleName} installed successfully.`)
-    );
+    logSuccess(`Dependencies for ${moduleName} installed successfully.`);
 
     // Run iOS pod install automatically when dependencies are installed
     runIosPodInstall(projectRoot);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
     throw new Error(
-      `Error installing dependencies for ${moduleName}: ${errorMessage}`
+      `Error installing dependencies for ${moduleName}: ${getErrorMessage(error)}`
     );
   }
 }
 
 function runIosPodInstall(projectRoot: string): void {
   try {
-    console.log(chalk.blue('\n🍎 Running iOS pod install...'));
+    logInfo('\n🍎 Running iOS pod install...');
     execCommandInteractive('npm run ios:pod-install', projectRoot);
-    console.log(chalk.green('iOS pod install completed successfully.\n'));
+    logSuccess('iOS pod install completed successfully.\n');
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    console.log(chalk.yellow('Error running iOS pod install:', errorMessage));
-    console.log(
-      chalk.gray('You may need to run it manually: npm run ios:pod-install\n')
-    );
+    logWarning(`Error running iOS pod install: ${getErrorMessage(error)}`);
+    logGray('You may need to run it manually: npm run ios:pod-install\n');
   }
 }
 
@@ -155,26 +161,22 @@ async function uninstallDependencies(
   }
 
   try {
-    console.log(chalk.blue(`Uninstalling dependencies for ${moduleName}...`));
+    logInfo(`Uninstalling dependencies for ${moduleName}...`);
     for (const dep of moduleConfig.dependencies) {
       const depName = dep.split('@')[0]; // Remove version specifier
-      console.log(chalk.gray(`Uninstalling ${depName}...`));
+      logGray(`Uninstalling ${depName}...`);
       execCommandInteractive(
         `npm uninstall ${depName} --save --legacy-peer-deps`,
         projectRoot
       );
     }
-    console.log(
-      chalk.green(`Dependencies for ${moduleName} uninstalled successfully.`)
-    );
+    logSuccess(`Dependencies for ${moduleName} uninstalled successfully.`);
 
     // Run iOS pod install automatically when dependencies are uninstalled
     runIosPodInstall(projectRoot);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
     throw new Error(
-      `Error uninstalling dependencies for ${moduleName}: ${errorMessage}`
+      `Error uninstalling dependencies for ${moduleName}: ${getErrorMessage(error)}`
     );
   }
 }
@@ -189,12 +191,12 @@ async function enableModules(
   try {
     for (const moduleName of moduleNames) {
       if (!modulesConfig[moduleName]) {
-        spinner.fail(chalk.red(`Unknown module: ${moduleName}`));
+        spinner.fail(failMessage(`Unknown module: ${moduleName}`));
         continue;
       }
 
       if (isModuleLinked(moduleName, projectRoot)) {
-        spinner.info(chalk.yellow(`Module ${moduleName} is already linked.`));
+        spinner.info(warningMessage(`Module ${moduleName} is already linked.`));
       } else {
         spinner.stop();
         linkModule(moduleName, modulesConfig[moduleName], projectRoot);
@@ -206,11 +208,11 @@ async function enableModules(
       spinner.start();
     }
 
-    spinner.succeed(chalk.green('Modules enabled successfully!'));
+    spinner.succeed(successMessage('Modules enabled successfully!'));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    spinner.fail(chalk.red(`Error enabling modules: ${errorMessage}`));
+    spinner.fail(
+      failMessage(`Error enabling modules: ${getErrorMessage(error)}`)
+    );
     throw error;
   }
 }
@@ -225,12 +227,14 @@ async function disableModules(
   try {
     for (const moduleName of moduleNames) {
       if (!modulesConfig[moduleName]) {
-        spinner.fail(chalk.red(`Unknown module: ${moduleName}`));
+        spinner.fail(failMessage(`Unknown module: ${moduleName}`));
         continue;
       }
 
       if (!isModuleLinked(moduleName, projectRoot)) {
-        spinner.info(chalk.yellow(`Module ${moduleName} is already unlinked.`));
+        spinner.info(
+          warningMessage(`Module ${moduleName} is already unlinked.`)
+        );
       } else {
         spinner.stop();
         unlinkModule(moduleName, projectRoot);
@@ -246,11 +250,11 @@ async function disableModules(
       spinner.start();
     }
 
-    spinner.succeed(chalk.green('Modules disabled successfully!'));
+    spinner.succeed(successMessage('Modules disabled successfully!'));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    spinner.fail(chalk.red(`Error disabling modules: ${errorMessage}`));
+    spinner.fail(
+      failMessage(`Error disabling modules: ${getErrorMessage(error)}`)
+    );
     throw error;
   }
 }
@@ -258,30 +262,29 @@ async function disableModules(
 function showModuleStatus(projectRoot: string): void {
   const modulesConfig = getModulesConfig(projectRoot);
 
-  console.log(chalk.blue('\nModule Status:'));
-  console.log(chalk.blue('=============='));
+  logHeader('\nModule Status:');
+  logHeader('==============');
 
   for (const [moduleName, config] of Object.entries(modulesConfig)) {
     const isLinked = isModuleLinked(moduleName, projectRoot);
     const status = isLinked
       ? chalk.green('✅ LINKED')
       : chalk.red('❌ UNLINKED');
-    console.log(`${chalk.cyan(moduleName)}: ${status}`);
+    logInfo(`${moduleName}: ${status}`);
 
     if (config.dependencies.length > 0) {
-      console.log(
-        chalk.gray(`  Dependencies: ${config.dependencies.join(', ')}`)
-      );
+      logGray(`  Dependencies: ${config.dependencies.join(', ')}`);
     }
   }
-  console.log('');
+  logGray('');
 }
 
 async function interactiveMode(projectRoot: string): Promise<void> {
   const modulesConfig = getModulesConfig(projectRoot);
+  const projectInfo = getProjectInfo(projectRoot);
 
-  console.log(chalk.blue('\n🔧 Module Setup Tool'));
-  console.log(chalk.blue('==================='));
+  logHeader(`\n🔧 Module Setup Tool for "${projectInfo.displayName}"`);
+  logHeader('===========================================');
   showModuleStatus(projectRoot);
 
   const { action } = await inquirer.prompt([
@@ -307,7 +310,7 @@ async function interactiveMode(projectRoot: string): Promise<void> {
           type: 'checkbox',
           name: 'enableModules',
           message: 'Select modules to enable:',
-          choices: Object.keys(modulesConfig).map((name) => ({
+          choices: Object.keys(modulesConfig).map(name => ({
             name: `${name} ${
               isModuleLinked(name, projectRoot) ? '(already linked)' : ''
             }`,
@@ -327,7 +330,7 @@ async function interactiveMode(projectRoot: string): Promise<void> {
           type: 'checkbox',
           name: 'disableModules',
           message: 'Select modules to disable:',
-          choices: Object.keys(modulesConfig).map((name) => ({
+          choices: Object.keys(modulesConfig).map(name => ({
             name: `${name} ${
               !isModuleLinked(name, projectRoot) ? '(already unlinked)' : ''
             }`,
@@ -354,7 +357,7 @@ async function interactiveMode(projectRoot: string): Promise<void> {
       break;
 
     case 'exit':
-      console.log(chalk.gray('Exiting...'));
+      logGray('Exiting...');
       break;
   }
 }
@@ -364,32 +367,33 @@ async function modulesAction(options: ModulesOptions): Promise<void> {
     const projectRoot = resolveProjectPath(options);
     const modulesConfig = getModulesConfig(projectRoot);
 
-  if (options.status) {
-    showModuleStatus(projectRoot);
-    return;
-  }
+    if (options.status) {
+      showModuleStatus(projectRoot);
+      return;
+    }
 
-  if (options.enable) {
-    const modules =
-      options.enable === 'all' ? Object.keys(modulesConfig) : [options.enable];
-    await enableModules(modules, projectRoot);
-    return;
-  }
+    if (options.enable) {
+      const modules =
+        options.enable === 'all'
+          ? Object.keys(modulesConfig)
+          : [options.enable];
+      await enableModules(modules, projectRoot);
+      return;
+    }
 
-  if (options.disable) {
-    const modules =
-      options.disable === 'all'
-        ? Object.keys(modulesConfig)
-        : [options.disable];
-    await disableModules(modules, projectRoot);
-    return;
-  }
+    if (options.disable) {
+      const modules =
+        options.disable === 'all'
+          ? Object.keys(modulesConfig)
+          : [options.disable];
+      await disableModules(modules, projectRoot);
+      return;
+    }
 
     // Interactive mode
     await interactiveMode(projectRoot);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(chalk.red(`❌ ${errorMessage}`));
+    logError(`❌ ${getErrorMessage(error)}`);
     process.exit(1);
   }
 }

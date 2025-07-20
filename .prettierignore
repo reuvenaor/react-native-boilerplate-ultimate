@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# Templates (entire folder - has its own formatting)
+templates/
+
+# Lock files and package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated files
+coverage/
+.nyc_output/
+
+# Git
+.git/
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env*
+
+# Documentation (preserve formatting)
+*.md
+CHANGELOG*
+LICENSE*
+
+# Config files that shouldn't be formatted
+*.json
+*.yaml
+*.yml
+.gitignore
+.eslintignore
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp

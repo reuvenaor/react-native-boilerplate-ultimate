@@ -2,9 +2,26 @@ import { Command } from 'commander';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import chalk from 'chalk';
 import ora from 'ora';
-import { validateProjectName, getTemplateDirectory, transformPackageJsonName } from '../utils/index.js';
+import {
+  validateProjectName,
+  getTemplateDirectory,
+  transformPackageJsonName,
+  renameReactNativeApp,
+  getProjectInfo,
+  getErrorMessage,
+  readPackageJson,
+  packageJsonExists,
+  writePackageJson,
+  logSuccess,
+  logError,
+  logWarning,
+  logGray,
+  logHeader,
+  logWhite,
+  successMessage,
+  warningMessage,
+} from '../utils/index.js';
 
 interface InitOptions {
   destination?: string;
@@ -24,6 +41,11 @@ function copyDirectory(
   const items = fs.readdirSync(source);
 
   for (const item of items) {
+    // Skip git-related files and directories
+    if (item === '.git' || item === '.gitmodules') {
+      continue;
+    }
+
     const sourcePath = path.join(source, item);
     const destinationPath = path.join(destination, item);
 
@@ -48,90 +70,114 @@ function installDependencies(projectPath: string): void {
   }
 }
 
-function createProject(projectName: string, options: InitOptions): void {
+async function createProject(
+  projectName: string,
+  options: InitOptions
+): Promise<void> {
   const { destination = process.cwd(), skipInstall } = options;
   const projectPath = path.join(destination, projectName);
   const templatePath = getTemplateDirectory();
 
   // Validate project name
   if (!validateProjectName(projectName)) {
-    console.error(chalk.red(`❌ Invalid project name: ${projectName}`));
-    console.error(
-      chalk.yellow(
-        'Project name should start with a letter and contain only letters, numbers, underscores, and hyphens.'
-      )
+    logError(`❌ Invalid project name: ${projectName}`);
+    logWarning(
+      'Project name should start with a letter and contain only letters, numbers, underscores, and hyphens.'
     );
     process.exit(1);
   }
 
   // Check if project directory already exists
   if (fs.existsSync(projectPath)) {
-    console.error(
-      chalk.red(`❌ Project directory already exists: ${projectPath}`)
-    );
+    logError(`❌ Project directory already exists: ${projectPath}`);
     process.exit(1);
   }
 
   // Check if template exists
   if (!fs.existsSync(templatePath)) {
-    console.error(
-      chalk.red(`❌ Template directory not found: ${templatePath}`)
-    );
+    logError(`❌ Template directory not found: ${templatePath}`);
     process.exit(1);
   }
 
-  console.log(
-    chalk.blue(`🚀 Creating project "${projectName}" at ${projectPath}`)
-  );
-  console.log(chalk.gray(`📁 Template source: ${templatePath}`));
+  logHeader(`🚀 Creating project "${projectName}" at ${projectPath}`);
+  logGray(`📁 Template source: ${templatePath}`);
 
   try {
     // Copy template files
     const copySpinner = ora('Copying template files...').start();
     copyDirectory(templatePath, projectPath, projectName);
-    copySpinner.succeed(chalk.green('✅ Template files copied successfully'));
+    copySpinner.succeed(successMessage('Template files copied successfully'));
 
     // Update package.json name
-    const packageJsonPath = path.join(projectPath, 'package.json');
-    if (fs.existsSync(packageJsonPath)) {
-      const packageJson = fs.readJsonSync(packageJsonPath);
+    if (packageJsonExists(projectPath)) {
+      const packageJson = readPackageJson(projectPath);
       packageJson.name = transformPackageJsonName(projectName);
-      fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 });
+      writePackageJson(projectPath, packageJson);
     }
 
-    // Install dependencies
+    // Install dependencies first (needed for react-native-rename)
     if (!skipInstall) {
       const installSpinner = ora('Installing dependencies...').start();
       try {
         installDependencies(projectPath);
-        installSpinner.succeed(chalk.green('✅ Dependencies installed'));
+        installSpinner.succeed(successMessage('Dependencies installed'));
       } catch {
-        installSpinner.fail(chalk.yellow('⚠️  Dependency installation failed'));
+        installSpinner.fail(warningMessage('Dependency installation failed'));
+      }
+    }
+
+    // Get current project info to check if rename is needed
+    const currentProjectInfo = getProjectInfo(projectPath);
+    logGray(
+      `Current project name: "${currentProjectInfo.name}", Target: "${projectName}"`
+    );
+
+    // Rename app if the current name doesn't match desired project name
+    if (currentProjectInfo.name !== projectName) {
+      const renameSpinner = ora(
+        `Renaming app from ${currentProjectInfo.name} to ${projectName}...`
+      ).start();
+      try {
+        // Initialize git first (required by react-native-rename)
+        execSync('git init', { cwd: projectPath, stdio: 'pipe' });
+
+        await renameReactNativeApp(projectPath, projectName);
+
+        // Verify the rename worked by reading project info again
+        const updatedProjectInfo = getProjectInfo(projectPath);
+        if (updatedProjectInfo.name === projectName) {
+          renameSpinner.succeed(successMessage('App renamed successfully'));
+        } else {
+          renameSpinner.warn(
+            warningMessage('App renamed but verification failed')
+          );
+        }
+      } catch (error) {
+        renameSpinner.fail(
+          warningMessage(`App renaming failed: ${getErrorMessage(error)}`)
+        );
+        logGray(
+          `Project created but still uses "${currentProjectInfo.name}" name`
+        );
       }
     }
 
     // Success message
-    console.log(
-      chalk.green(`\n🎉 Project "${projectName}" created successfully!`)
-    );
-    console.log(chalk.gray(`📁 Location: ${projectPath}`));
-    console.log(chalk.blue(`\nNext steps:`));
-    console.log(chalk.white(`  cd ${projectName}`));
+    logSuccess(`\n🎉 Project "${projectName}" created successfully!`);
+    logGray(`📁 Location: ${projectPath}`);
+    logHeader(`\nNext steps:`);
+    logWhite(`  cd ${projectName}`);
     if (skipInstall) {
-      console.log(chalk.white(`  npm install`));
+      logWhite(`  npm install --legacy-peer-deps`);
     }
-    console.log(chalk.white(`  npm run ios     # Run on iOS`));
-    console.log(chalk.white(`  npm run android # Run on Android`));
-    console.log(
-      chalk.gray(
-        `\nTo manage modules, use: ${chalk.cyan(
-          '@reuvenorg/react-native-boilerplate-ultimate modules --help'
-        )}`
-      )
+    logWhite(`  npm run ios     # Run on iOS`);
+    logWhite(`  npm run android # Run on Android`);
+    logGray(
+      '\nTo manage modules, use: @reuvenorg/react-native-boilerplate-ultimate modules --help'
     );
   } catch (error) {
     if (error instanceof Error)
-      console.error(chalk.red('❌ Failed to create project:'), error?.message);
+      logError(`❌ Failed to create project: ${error.message}`);
     process.exit(1);
   }
 }
