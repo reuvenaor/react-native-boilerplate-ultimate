@@ -1,19 +1,10 @@
-<div align="center" style="background: linear-gradient(135deg, #2c1810 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #2c1810 100%); background-size: 400% 400%; animation: gradientBg 8s ease infinite; padding: 40px 20px; border-radius: 16px; margin: 20px 0; border: 1px solid rgba(255,255,255,0.1);">
-    <h1 style="color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.7); margin: 0; font-size: 2.5em; font-weight: 700;">
-        React Native Boilerplate Ultimate
-    </h1>
-    <p style="color: #e0e0e0; font-size: 1.1em; margin: 15px 0 0 0; text-shadow: 0 2px 4px rgba(0,0,0,0.7); max-width: 600px; line-height: 1.4;">
-        A comprehensive CLI tool for creating and managing<br>
-        React Native projects with modular architecture and best practices.
-    </p>
-    <style>
-        @keyframes gradientBg {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-    </style>
+<div align="center">
+  <img src="./docs/svg/header.svg" alt="React Native Boilerplate Ultimate - CLI tool for React Native development" width="100%"/>
 </div>
+
+# React Native Boilerplate Ultimate
+
+_A comprehensive CLI tool for creating and managing React Native projects with modular architecture and best practices._
 
 ## Quick Start
 

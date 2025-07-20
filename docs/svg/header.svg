@@ -1,0 +1,97 @@
+<svg width="800" height="120" viewBox="0 0 800 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- DRY: Reusable animations -->
+    <animate id="colorShift" attributeName="stop-color" values="#2c1810;#1a1a2e;#16213e;#0f3460;#2c1810" dur="8s" repeatCount="indefinite"/>
+    <animate id="opacityPulse" attributeName="opacity" values="0.2;1;0.2" dur="4s" repeatCount="indefinite"/>
+    <animateTransform id="floatUp" attributeName="transform" type="translate" values="0,0;0,-10;0,0" dur="6s" repeatCount="indefinite"/>
+    <animate id="sizeGrow" attributeName="r" values="1;3;1" dur="5s" repeatCount="indefinite"/>
+    
+    <!-- Background gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2c1810;stop-opacity:1">
+        <use href="#colorShift"/>
+      </stop>
+      <stop offset="25%" style="stop-color:#1a1a2e;stop-opacity:1">
+        <animate attributeName="stop-color" values="#1a1a2e;#16213e;#0f3460;#2c1810;#1a1a2e" dur="8s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="50%" style="stop-color:#16213e;stop-opacity:1">
+        <animate attributeName="stop-color" values="#16213e;#0f3460;#2c1810;#1a1a2e;#16213e" dur="8s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="75%" style="stop-color:#0f3460;stop-opacity:1">
+        <animate attributeName="stop-color" values="#0f3460;#2c1810;#1a1a2e;#16213e;#0f3460" dur="8s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" style="stop-color:#2c1810;stop-opacity:1">
+        <use href="#colorShift"/>
+      </stop>
+    </linearGradient>
+    
+    <!-- Enhanced particle glow -->
+    <filter id="particleGlow" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Reusable animated particle -->
+    <g id="particle">
+      <circle r="1.5" fill="#ffffff" filter="url(#particleGlow)">
+        <use href="#opacityPulse"/>
+        <use href="#sizeGrow"/>
+        <use href="#floatUp"/>
+      </circle>
+    </g>
+    
+    <!-- Animated code symbol -->
+    <g id="codeSymbol">
+      <text font-family="monospace" font-size="24" fill="#ffffff" filter="url(#particleGlow)">&lt;/&gt;
+        <animateTransform attributeName="transform" type="rotate" values="0;360" dur="20s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.3;0.8;0.3" dur="6s" repeatCount="indefinite"/>
+      </text>
+    </g>
+  </defs>
+  
+  <!-- Animated background -->
+  <rect width="800" height="120" fill="url(#bgGradient)" rx="12" ry="12" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  
+  <!-- Centered short text -->
+  <text x="400" y="70" font-family="Arial, sans-serif" font-size="32" font-weight="bold" 
+        text-anchor="middle" fill="#ffffff" filter="url(#particleGlow)">
+    RN Boilerplate
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite"/>
+  </text>
+  
+  <!-- Code symbols instead of emojis -->
+  <use href="#codeSymbol" x="50" y="35"/>
+  <use href="#codeSymbol" x="730" y="35"/>
+  
+  <!-- Floating particles with dramatic glow -->
+  <use href="#particle" x="150" y="30">
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,-15;0,0" dur="7s" repeatCount="indefinite"/>
+  </use>
+  
+  <use href="#particle" x="350" y="90">
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,-20;0,0" dur="9s" repeatCount="indefinite"/>
+  </use>
+  
+  <use href="#particle" x="550" y="40">
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,-12;0,0" dur="8s" repeatCount="indefinite"/>
+  </use>
+  
+  <use href="#particle" x="650" y="85">
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,-18;0,0" dur="6s" repeatCount="indefinite"/>
+  </use>
+  
+  <!-- Additional twinkling stars -->
+  <circle cx="250" cy="25" r="1" fill="#ffffff" filter="url(#particleGlow)">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="1;2.5;1" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  
+  <circle cx="450" cy="100" r="1" fill="#ffffff" filter="url(#particleGlow)">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="1;2;1" dur="3s" repeatCount="indefinite"/>
+  </circle>
+</svg>
