@@ -29,10 +29,6 @@ export function findProjectRoot(
   return null;
 }
 
-export function isInProject(): boolean {
-  return findProjectRoot() !== null;
-}
-
 export function execCommand(command: string, cwd?: string): string {
   try {
     return execSync(command, {
@@ -76,83 +72,6 @@ export function getTemplateDirectory(): string {
   return templateDir;
 }
 
-export const EXCLUDED_PATHS = [
-  'node_modules',
-  '.git',
-  'vendor',
-  'cli',
-  'ios/build',
-  'android/build',
-  // We want the lock files
-  // 'ios/ExApp.xcworkspace/xcuserdata',
-  // 'ios/Podfile.lock',
-  // 'package-lock.json',
-  '.expo',
-  'dist',
-  'build',
-  'scripts/create-project.ts',
-];
-
-export function shouldExcludePath(filePath: string): boolean {
-  return EXCLUDED_PATHS.some(
-    (excludedPath) =>
-      filePath.includes(excludedPath) || filePath.includes(`/${excludedPath}/`)
-  );
-}
-
-export function isTextFile(filePath: string): boolean {
-  const textExtensions = [
-    '.ts',
-    '.tsx',
-    '.js',
-    '.jsx',
-    '.json',
-    '.md',
-    '.txt',
-    '.yml',
-    '.yaml',
-    '.xml',
-    '.gradle',
-    '.properties',
-    '.swift',
-    '.kt',
-    '.java',
-    '.storyboard',
-    '.plist',
-    '.xcscheme',
-    '.pbxproj',
-    '.lockfile',
-    '.config',
-    '.gitignore',
-    '.env',
-    '.sh',
-    '.bat',
-    '.xcprivacy',
-  ];
-
-  const ext = path.extname(filePath).toLowerCase();
-  return textExtensions.includes(ext) || !path.extname(filePath);
-}
-
-export function replaceTemplateVariables(
-  content: string,
-  projectName: string
-): string {
-  let result = content;
-  const projectNameLower = projectName.toLowerCase();
-  const projectNameKebab = projectName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-
-  result = result.replace(/ExApp/g, projectName);
-  result = result.replace(/exapp/g, projectNameLower);
-  result = result.replace(
-    /com\.anonymous\.exapp/g,
-    `com.anonymous.${projectNameLower}`
-  );
-  result = result.replace(/react-native-template-er/g, projectNameKebab);
-
-  return result;
-}
-
 // Common interface for commands that accept project path
 export interface ProjectPathOptions {
   destination?: string;
@@ -165,7 +84,7 @@ export function resolveProjectPath(options: ProjectPathOptions): string {
   if (options.destination) {
     // If destination is provided, resolve it to absolute path
     projectPath = path.resolve(options.destination);
-    
+
     // Validate that the destination is a React Native project
     const packageJsonPath = path.join(projectPath, 'package.json');
     if (!fs.existsSync(packageJsonPath)) {
@@ -190,7 +109,9 @@ export function resolveProjectPath(options: ProjectPathOptions): string {
     // If no destination provided, find project root from current directory
     const foundRoot = findProjectRoot();
     if (!foundRoot) {
-      throw new Error('Not in a React Native project directory. Use --destination to specify project path.');
+      throw new Error(
+        'Not in a React Native project directory. Use --destination to specify project path.'
+      );
     }
     projectPath = foundRoot;
   }
