@@ -2,7 +2,7 @@
   <img src="./docs/svg/header.svg" alt="React Native Boilerplate Ultimate - CLI tool for React Native development" width="100%"/>
 </div>
 
-# React Native Boilerplate Ultimate
+# React Native Boilerplate
 
 _A comprehensive CLI tool for creating and managing React Native projects with modular architecture and best practices._
 
@@ -200,6 +200,27 @@ npm run build
 ```
 
 ## Template Documentation
+
+### Modular Architecture
+
+The template uses a **modular architecture** where features are organized as independent npm packages in a `modules/` directory. Each module is self-contained with its own dependencies and can be easily enabled or disabled. This approach provides:
+
+- **Clean separation** of concerns
+- **Easy maintenance** and updates
+- **Selective feature inclusion** - only use what you need
+- **Scalable codebase** structure
+
+### Expo Modules Support
+
+The template includes **full Expo modules support** with pre-configured integration:
+
+- **Expo SDK compatibility** - Latest Expo modules work out of the box
+- **Development build ready** - Configured for Expo Development Builds
+- **EAS Build support** - Compatible with Expo Application Services
+- **Hybrid workflow** - Mix Expo modules with native code seamlessly
+- **Auto-linking** - Expo modules are automatically linked during setup
+
+### Additional Resources
 
 For detailed documentation about the React Native template structure, components, and features, see the [React Native Template repository](https://github.com/reuvenaor/react-native-template).
 

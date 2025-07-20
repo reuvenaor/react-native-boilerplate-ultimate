@@ -1,4 +1,4 @@
-<svg width="800" height="120" viewBox="0 0 800 120" xmlns="http://www.w3.org/2000/svg">
+<svg width="800" height="200" viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <!-- DRY: Reusable animations -->
     <animate id="colorShift" attributeName="stop-color" values="#2c1810;#1a1a2e;#16213e;#0f3460;#2c1810" dur="8s" repeatCount="indefinite"/>
@@ -54,25 +54,25 @@
   </defs>
   
   <!-- Animated background -->
-  <rect width="800" height="120" fill="url(#bgGradient)" rx="12" ry="12" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <rect width="800" height="200" fill="url(#bgGradient)" rx="12" ry="12" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
   
   <!-- Centered short text -->
-  <text x="400" y="70" font-family="Arial, sans-serif" font-size="32" font-weight="bold" 
+  <text x="400" y="116" font-family="Arial, sans-serif" font-size="32" font-weight="bold" 
         text-anchor="middle" fill="#ffffff" filter="url(#particleGlow)">
-    RN Boilerplate
+    React Native Boilerplate Ultimate
     <animate attributeName="opacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite"/>
   </text>
   
   <!-- Code symbols instead of emojis -->
-  <use href="#codeSymbol" x="50" y="35"/>
-  <use href="#codeSymbol" x="730" y="35"/>
+  <use href="#codeSymbol" x="50" y="100"/>
+  <use href="#codeSymbol" x="730" y="100"/>
   
   <!-- Floating particles with dramatic glow -->
-  <use href="#particle" x="150" y="30">
+  <use href="#particle" x="150" y="150">
     <animateTransform attributeName="transform" type="translate" values="0,0;0,-15;0,0" dur="7s" repeatCount="indefinite"/>
   </use>
   
-  <use href="#particle" x="350" y="90">
+  <use href="#particle" x="350" y="100">
     <animateTransform attributeName="transform" type="translate" values="0,0;0,-20;0,0" dur="9s" repeatCount="indefinite"/>
   </use>
   
