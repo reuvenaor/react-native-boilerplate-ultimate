@@ -61,6 +61,10 @@ export function validateProjectName(name: string): boolean {
   return validNameRegex.test(name);
 }
 
+export function transformPackageJsonName(projectName: string): string {
+  return projectName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+}
+
 export function getTemplateDirectory(): string {
   // Get the template directory relative to the CLI package
   const cliDir = path.dirname(path.dirname(__dirname));

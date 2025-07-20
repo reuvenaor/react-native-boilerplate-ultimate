@@ -4,7 +4,7 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import chalk from 'chalk';
 import ora from 'ora';
-import { validateProjectName, getTemplateDirectory } from '../utils/index.js';
+import { validateProjectName, getTemplateDirectory, transformPackageJsonName } from '../utils/index.js';
 
 interface InitOptions {
   destination?: string;
@@ -95,7 +95,7 @@ function createProject(projectName: string, options: InitOptions): void {
     const packageJsonPath = path.join(projectPath, 'package.json');
     if (fs.existsSync(packageJsonPath)) {
       const packageJson = fs.readJsonSync(packageJsonPath);
-      packageJson.name = projectName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      packageJson.name = transformPackageJsonName(projectName);
       fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 });
     }
 
