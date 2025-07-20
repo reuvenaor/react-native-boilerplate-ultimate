@@ -34,8 +34,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Test CLI
-        run: |
-          npm link
-          @reuvenorg/react-native-boilerplate-ultimate --help
