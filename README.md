@@ -1,6 +1,19 @@
-# React Native Boilerplate Ultimate
-
-A comprehensive CLI tool for creating and managing React Native projects with modular architecture and best practices.
+<div align="center" style="background: linear-gradient(135deg, #2c1810 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #2c1810 100%); background-size: 400% 400%; animation: gradientBg 8s ease infinite; padding: 40px 20px; border-radius: 16px; margin: 20px 0; border: 1px solid rgba(255,255,255,0.1);">
+    <h1 style="color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.7); margin: 0; font-size: 2.5em; font-weight: 700;">
+        React Native Boilerplate Ultimate
+    </h1>
+    <p style="color: #e0e0e0; font-size: 1.1em; margin: 15px 0 0 0; text-shadow: 0 2px 4px rgba(0,0,0,0.7); max-width: 600px; line-height: 1.4;">
+        A comprehensive CLI tool for creating and managing<br>
+        React Native projects with modular architecture and best practices.
+    </p>
+    <style>
+        @keyframes gradientBg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</div>
 
 ## Quick Start
 
@@ -43,6 +56,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate modules
 - `-s, --status` - Show module status
 - `-e, --enable <module>` - Enable a specific module or "all"
 - `-d, --disable <module>` - Disable a specific module or "all"
+- `--destination <path>` - Project directory path
 
 **Available Modules:**
 
@@ -56,6 +70,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate modules
 npx @reuvenorg/react-native-boilerplate-ultimate modules --status
 npx @reuvenorg/react-native-boilerplate-ultimate modules --enable md-chat-ai-screen
 npx @reuvenorg/react-native-boilerplate-ultimate modules --disable all
+npx @reuvenorg/react-native-boilerplate-ultimate modules --status --destination ~/Projects/MyApp
 ```
 
 ### `icons` - Generate Icons
@@ -73,6 +88,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate icons
 - `--splash` - Generate splash screens only
 - `--primary <color>` - Primary color (default: #1976D2)
 - `--background <color>` - Background color (default: #FFFFFF)
+- `--destination <path>` - Project directory path
 
 **Prerequisites:**
 The target project must have the `canvas` package installed:
@@ -87,6 +103,7 @@ npm install canvas --save-dev
 npx @reuvenorg/react-native-boilerplate-ultimate icons --primary "#FF6B6B" --background "#FFFFFF"
 npx @reuvenorg/react-native-boilerplate-ultimate icons --android
 npx @reuvenorg/react-native-boilerplate-ultimate icons --splash
+npx @reuvenorg/react-native-boilerplate-ultimate icons --primary "#2196F3" --destination /path/to/project
 ```
 
 ### `refresh` - Refresh Project
@@ -102,6 +119,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate refresh
 - `-w, --watchman` - Clear watchman watches only
 - `-m, --modules` - Clean and reinstall node modules only
 - `-s, --start` - Start with cache reset only
+- `--destination <path>` - Project directory path
 
 **Examples:**
 
@@ -109,6 +127,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate refresh
 npx @reuvenorg/react-native-boilerplate-ultimate refresh --watchman
 npx @reuvenorg/react-native-boilerplate-ultimate refresh --modules
 npx @reuvenorg/react-native-boilerplate-ultimate refresh  # Full refresh
+npx @reuvenorg/react-native-boilerplate-ultimate refresh --modules --destination ~/MyProject
 ```
 
 ### `devices` - List Devices
@@ -124,6 +143,7 @@ npx @reuvenorg/react-native-boilerplate-ultimate devices
 - `-d, --details` - Show detailed device information
 - `-a, --android` - Show Android devices only
 - `-i, --ios` - Show iOS devices only
+- `--destination <path>` - Project directory path (optional for devices command)
 
 **Prerequisites:**
 

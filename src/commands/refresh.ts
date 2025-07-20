@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { findProjectRoot, execCommandInteractive } from '../utils/index.js';
+import { execCommandInteractive, resolveProjectPath, ProjectPathOptions } from '../utils/index.js';
 
-interface RefreshOptions {
+interface RefreshOptions extends ProjectPathOptions {
   watchman?: boolean;
   modules?: boolean;
   start?: boolean;
@@ -68,13 +68,9 @@ async function refreshAll(projectRoot: string): Promise<void> {
 }
 
 async function refreshAction(options: RefreshOptions): Promise<void> {
-  const projectRoot = findProjectRoot();
-  if (!projectRoot) {
-    console.error(chalk.red('❌ Not in a React Native project directory'));
-    process.exit(1);
-  }
-
   try {
+    const projectRoot = resolveProjectPath(options);
+
     if (options.watchman) {
       await refreshWatchman();
     } else if (options.modules) {
@@ -90,9 +86,8 @@ async function refreshAction(options: RefreshOptions): Promise<void> {
       console.log(chalk.green('\n🎉 Refresh completed successfully!'));
     }
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    console.error(chalk.red(`❌ Refresh failed: ${errorMessage}`));
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(chalk.red(`❌ ${errorMessage}`));
     process.exit(1);
   }
 }
@@ -102,4 +97,5 @@ export const refreshCommand = new Command('refresh')
   .option('-w, --watchman', 'Clear watchman watches only')
   .option('-m, --modules', 'Clean and reinstall node modules only')
   .option('-s, --start', 'Start with cache reset only')
+  .option('--destination <path>', 'Project directory path')
   .action(refreshAction);

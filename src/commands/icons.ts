@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { findProjectRoot } from '../utils/index.js';
+import { resolveProjectPath, ProjectPathOptions } from '../utils/index.js';
 
 // Note: This command requires the 'canvas' package to be installed in the target project
 // We'll provide instructions for this dependency
@@ -338,14 +338,19 @@ async function generateSplashScreens(
   }
 }
 
-async function iconsAction(options: Record<string, unknown>): Promise<void> {
-  const projectRoot = findProjectRoot();
-  if (!projectRoot) {
-    console.error(chalk.red('❌ Not in a React Native project directory'));
-    process.exit(1);
-  }
+interface IconsOptions extends ProjectPathOptions {
+  android?: boolean;
+  ios?: boolean;
+  splash?: boolean;
+  primary?: string;
+  background?: string;
+}
 
-  const colors: IconColors = {
+async function iconsAction(options: IconsOptions): Promise<void> {
+  try {
+    const projectRoot = resolveProjectPath(options);
+
+    const colors: IconColors = {
     primary:
       typeof options.primary === 'string'
         ? options.primary
@@ -372,9 +377,8 @@ async function iconsAction(options: Record<string, unknown>): Promise<void> {
       chalk.gray('Note: Canvas package is required for icon generation.')
     );
     return;
-  }
+    }
 
-  try {
     const isAndroidOnly = Boolean(options.android);
     const isIOSOnly = Boolean(options.ios);
     const isSplashOnly = Boolean(options.splash);
@@ -394,9 +398,8 @@ async function iconsAction(options: Record<string, unknown>): Promise<void> {
 
     console.log(chalk.green('\n🎉 Icon generation completed successfully!'));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    console.error(chalk.red(`\n❌ Icon generation failed: ${errorMessage}`));
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(chalk.red(`❌ ${errorMessage}`));
     process.exit(1);
   }
 }
@@ -408,4 +411,5 @@ export const iconsCommand = new Command('icons')
   .option('--splash', 'Generate splash screens only')
   .option('--primary <color>', 'Primary color', DEFAULT_COLORS.primary)
   .option('--background <color>', 'Background color', DEFAULT_COLORS.background)
+  .option('--destination <path>', 'Project directory path')
   .action(iconsAction);
