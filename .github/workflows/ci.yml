@@ -34,3 +34,12 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Test CLI
+        run: |
+          npx . --help
+          npx . init --help
+          npx . modules --help
+          npx . icons --help
+          npx . devices --help
+          npx . refresh --help
