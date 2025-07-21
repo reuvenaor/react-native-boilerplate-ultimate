@@ -34,7 +34,8 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run lint && npm run typecheck && npm run build",
     "changeset": "changeset",
-    "version": "changeset version"
+    "version": "changeset version",
+    "release": "npm run build"
   },
   "files": [
     "dist",

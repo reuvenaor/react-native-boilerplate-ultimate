@@ -27,9 +27,14 @@ jobs:
 
       - run: npm run lint && npm run typecheck && npm test && npm run build
 
-      - uses: changesets/action@v1
+      - name: Create Release Pull Request or Publish to GitHub
+        id: changesets
+        uses: changesets/action@v1
         with:
           version: npm run version
+          publish: npm run release
           commit: "chore: release and update submodule"
+          title: "chore: release package"
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
