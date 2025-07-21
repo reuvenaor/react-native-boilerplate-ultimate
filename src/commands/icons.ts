@@ -1,9 +1,21 @@
 import { Command } from 'commander';
 import fs from 'fs-extra';
 import * as path from 'path';
-import chalk from 'chalk';
 import ora from 'ora';
-import { resolveProjectPath, ProjectPathOptions } from '../utils/index.js';
+import {
+  resolveProjectPath,
+  ProjectPathOptions,
+  getProjectInfo,
+  getErrorMessage,
+  readPackageJson,
+  logSuccess,
+  logError,
+  logWarning,
+  logGray,
+  logHeader,
+  successMessage,
+  failMessage,
+} from '../utils/index.js';
 
 // Note: This command requires the 'canvas' package to be installed in the target project
 // We'll provide instructions for this dependency
@@ -91,8 +103,7 @@ function ensureDirectoryExists(dirPath: string): void {
 
 function validateCanvasInstallation(projectRoot: string): boolean {
   try {
-    const packageJsonPath = path.join(projectRoot, 'package.json');
-    const packageJson = fs.readJsonSync(packageJsonPath);
+    const packageJson = readPackageJson(projectRoot);
     return !!(
       (packageJson.dependencies && packageJson.dependencies['canvas']) ||
       (packageJson.devDependencies && packageJson.devDependencies['canvas'])
@@ -140,12 +151,12 @@ async function generateIcon(
     ctx.font = `${size * 0.15}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('ExApp', centerX, centerY);
+    ctx.fillText('App', centerX, centerY);
 
     return canvas.toBuffer('image/png');
   } catch {
     throw new Error(
-      'Canvas package not found. Please install it in your project: npm install canvas --save-dev'
+      'Canvas package not found. Please install it in your project: npm install canvas --save-dev --legacy-peer-deps'
     );
   }
 }
@@ -188,7 +199,7 @@ async function generateSplashLogo(
     return canvas.toBuffer('image/png');
   } catch {
     throw new Error(
-      'Canvas package not found. Please install it in your project: npm install canvas --save-dev'
+      'Canvas package not found. Please install it in your project: npm install canvas --save-dev --legacy-peer-deps'
     );
   }
 }
@@ -225,12 +236,10 @@ async function generateAndroidIcons(
       fs.writeFileSync(roundFilePath, iconBuffer);
     }
 
-    spinner.succeed(chalk.green('✅ Android icons generated successfully'));
+    spinner.succeed(successMessage('Android icons generated successfully'));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
     spinner.fail(
-      chalk.red(`❌ Failed to generate Android icons: ${errorMessage}`)
+      failMessage(`Failed to generate Android icons: ${getErrorMessage(error)}`)
     );
     throw error;
   }
@@ -243,10 +252,11 @@ async function generateIOSIcons(
   const spinner = ora('Generating iOS icons...').start();
 
   try {
+    const projectInfo = getProjectInfo(projectRoot);
     const iosIconPath = path.join(
       projectRoot,
       'ios',
-      'ExApp',
+      projectInfo.iosScheme,
       'Images.xcassets',
       'AppIcon.appiconset'
     );
@@ -262,11 +272,11 @@ async function generateIOSIcons(
       fs.writeFileSync(filePath, iconBuffer);
     }
 
-    spinner.succeed(chalk.green('✅ iOS icons generated successfully'));
+    spinner.succeed(successMessage('iOS icons generated successfully'));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    spinner.fail(chalk.red(`❌ Failed to generate iOS icons: ${errorMessage}`));
+    spinner.fail(
+      failMessage(`Failed to generate iOS icons: ${getErrorMessage(error)}`)
+    );
     throw error;
   }
 }
@@ -305,10 +315,11 @@ async function generateSplashScreens(
     }
 
     // iOS splash screen
+    const projectInfo = getProjectInfo(projectRoot);
     const iosPath = path.join(
       projectRoot,
       'ios',
-      'ExApp',
+      projectInfo.iosScheme,
       'Images.xcassets',
       'SplashScreenLogo.imageset'
     );
@@ -327,12 +338,12 @@ async function generateSplashScreens(
       await generateSplashLogo(300, colors)
     );
 
-    spinner.succeed(chalk.green('✅ Splash screens generated successfully'));
+    spinner.succeed(successMessage('Splash screens generated successfully'));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
     spinner.fail(
-      chalk.red(`❌ Failed to generate splash screens: ${errorMessage}`)
+      failMessage(
+        `Failed to generate splash screens: ${getErrorMessage(error)}`
+      )
     );
     throw error;
   }
@@ -349,34 +360,31 @@ interface IconsOptions extends ProjectPathOptions {
 async function iconsAction(options: IconsOptions): Promise<void> {
   try {
     const projectRoot = resolveProjectPath(options);
+    const projectInfo = getProjectInfo(projectRoot);
 
     const colors: IconColors = {
-    primary:
-      typeof options.primary === 'string'
-        ? options.primary
-        : DEFAULT_COLORS.primary,
-    background:
-      typeof options.background === 'string'
-        ? options.background
-        : DEFAULT_COLORS.background,
-  };
+      primary:
+        typeof options.primary === 'string'
+          ? options.primary
+          : DEFAULT_COLORS.primary,
+      background:
+        typeof options.background === 'string'
+          ? options.background
+          : DEFAULT_COLORS.background,
+    };
 
-  console.log(chalk.blue('🎨 Icon Generator'));
-  console.log(chalk.gray(`Primary color: ${colors.primary}`));
-  console.log(chalk.gray(`Background color: ${colors.background}`));
+    logHeader(`🎨 Icon Generator for "${projectInfo.displayName}"`);
+    logGray(`Primary color: ${colors.primary}`);
+    logGray(`Background color: ${colors.background}`);
 
-  // Check if canvas is installed
-  if (!validateCanvasInstallation(projectRoot)) {
-    console.log(
-      chalk.yellow('\n⚠️  Canvas package not found in project dependencies.')
-    );
-    console.log(
-      chalk.white('Please install it first: npm install canvas --save-dev')
-    );
-    console.log(
-      chalk.gray('Note: Canvas package is required for icon generation.')
-    );
-    return;
+    // Check if canvas is installed
+    if (!validateCanvasInstallation(projectRoot)) {
+      logWarning('\n⚠️  Canvas package not found in project dependencies.');
+      console.log(
+        'Please install it first: npm install canvas --save-dev --legacy-peer-deps'
+      );
+      logGray('Note: Canvas package is required for icon generation.');
+      return;
     }
 
     const isAndroidOnly = Boolean(options.android);
@@ -396,10 +404,9 @@ async function iconsAction(options: IconsOptions): Promise<void> {
       await generateSplashScreens(projectRoot, colors);
     }
 
-    console.log(chalk.green('\n🎉 Icon generation completed successfully!'));
+    logSuccess('\n🎉 Icon generation completed successfully!');
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(chalk.red(`❌ ${errorMessage}`));
+    logError(`❌ ${getErrorMessage(error)}`);
     process.exit(1);
   }
 }

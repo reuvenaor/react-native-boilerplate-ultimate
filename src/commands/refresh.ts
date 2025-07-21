@@ -1,7 +1,18 @@
 import { Command } from 'commander';
-import chalk from 'chalk';
 import ora from 'ora';
-import { execCommandInteractive, resolveProjectPath, ProjectPathOptions } from '../utils/index.js';
+import {
+  execCommandInteractive,
+  resolveProjectPath,
+  ProjectPathOptions,
+  getProjectInfo,
+  getErrorMessage,
+  logSuccess,
+  logError,
+  logHeader,
+  successMessage,
+  failMessage,
+  infoMessage,
+} from '../utils/index.js';
 
 interface RefreshOptions extends ProjectPathOptions {
   watchman?: boolean;
@@ -14,12 +25,10 @@ async function refreshWatchman(): Promise<void> {
 
   try {
     execCommandInteractive('watchman watch-del-all');
-    spinner.succeed(chalk.green('✅ Watchman watches cleared'));
+    spinner.succeed(successMessage('Watchman watches cleared'));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
     spinner.fail(
-      chalk.red(`❌ Failed to clear watchman watches: ${errorMessage}`)
+      failMessage(`Failed to clear watchman watches: ${getErrorMessage(error)}`)
     );
     throw error;
   }
@@ -30,13 +39,11 @@ async function refreshModules(projectRoot: string): Promise<void> {
 
   try {
     execCommandInteractive('rm -rf node_modules/', projectRoot);
-    execCommandInteractive('npm install', projectRoot);
-    spinner.succeed(chalk.green('✅ Node modules refreshed'));
+    execCommandInteractive('npm install --legacy-peer-dep', projectRoot);
+    spinner.succeed(successMessage('Node modules refreshed'));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
     spinner.fail(
-      chalk.red(`❌ Failed to refresh node modules: ${errorMessage}`)
+      failMessage(`Failed to refresh node modules: ${getErrorMessage(error)}`)
     );
     throw error;
   }
@@ -46,21 +53,20 @@ async function refreshStart(projectRoot: string): Promise<void> {
   const spinner = ora('Starting with cache reset...').start();
 
   try {
-    spinner.info(chalk.blue('Starting React Native with cache reset...'));
+    spinner.info(infoMessage('Starting React Native with cache reset...'));
     spinner.stop();
     execCommandInteractive('npm run start -- --reset-cache', projectRoot);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    console.error(
-      chalk.red(`❌ Failed to start with cache reset: ${errorMessage}`)
-    );
+    logError(`❌ Failed to start with cache reset: ${getErrorMessage(error)}`);
     throw error;
   }
 }
 
 async function refreshAll(projectRoot: string): Promise<void> {
-  console.log(chalk.blue('🔄 Full refresh - this may take a while...'));
+  const projectInfo = getProjectInfo(projectRoot);
+  logHeader(
+    `🔄 Full refresh for "${projectInfo.displayName}" - this may take a while...`
+  );
 
   await refreshWatchman();
   await refreshModules(projectRoot);
@@ -83,11 +89,10 @@ async function refreshAction(options: RefreshOptions): Promise<void> {
     }
 
     if (!options.start) {
-      console.log(chalk.green('\n🎉 Refresh completed successfully!'));
+      logSuccess('\n🎉 Refresh completed successfully!');
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(chalk.red(`❌ ${errorMessage}`));
+    logError(`❌ ${getErrorMessage(error)}`);
     process.exit(1);
   }
 }

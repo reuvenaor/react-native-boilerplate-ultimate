@@ -1,6 +1,13 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { execCommand, ProjectPathOptions } from '../utils/index.js';
+import {
+  execCommand,
+  ProjectPathOptions,
+  logError,
+  logWarning,
+  logGray,
+  logHeader,
+} from '../utils/index.js';
 
 interface DeviceInfo {
   id: string;
@@ -39,8 +46,8 @@ function checkLibimobiledeviceInstalled(): boolean {
 
 function listAndroidDevices(showDetails: boolean): DeviceInfo[] {
   if (!checkAdbInstalled()) {
-    console.error(chalk.red('❌ ADB is not installed or not in PATH'));
-    console.error(chalk.yellow('Please install Android SDK platform tools'));
+    logError('❌ ADB is not installed or not in PATH');
+    logWarning('Please install Android SDK platform tools');
     return [];
   }
 
@@ -52,7 +59,7 @@ function listAndroidDevices(showDetails: boolean): DeviceInfo[] {
     const output = execCommand('adb devices');
     const lines = output
       .split('\n')
-      .filter((line) => line.trim() && !line.includes('List of devices'));
+      .filter(line => line.trim() && !line.includes('List of devices'));
 
     const devices: DeviceInfo[] = [];
 
@@ -94,7 +101,7 @@ function listAndroidDevices(showDetails: boolean): DeviceInfo[] {
 
     return devices;
   } catch {
-    console.error(chalk.red('❌ Failed to list Android devices'));
+    logError('❌ Failed to list Android devices');
     return [];
   }
 }
@@ -104,8 +111,8 @@ function listIOSDevices(showDetails: boolean): {
   simulators: DeviceInfo[];
 } {
   if (!checkXcrunInstalled()) {
-    console.error(chalk.red('❌ xcrun is not installed or not in PATH'));
-    console.error(chalk.yellow('Please install Xcode Command Line Tools'));
+    logError('❌ xcrun is not installed or not in PATH');
+    logWarning('Please install Xcode Command Line Tools');
     return { physical: [], simulators: [] };
   }
 
@@ -119,7 +126,7 @@ function listIOSDevices(showDetails: boolean): {
       const realDeviceLines = realDevicesOutput
         .split('\n')
         .filter(
-          (line) =>
+          line =>
             line.trim() &&
             !line.includes('Devices') &&
             !line.includes('==') &&
@@ -146,7 +153,7 @@ function listIOSDevices(showDetails: boolean): {
       const simulatorsOutput = execCommand('xcrun simctl list devices');
       const simulatorLines = simulatorsOutput
         .split('\n')
-        .filter((line) => line.includes('Booted'));
+        .filter(line => line.includes('Booted'));
 
       for (const line of simulatorLines) {
         const cleanLine = line.replace(/\s*\(.*\)\s*/g, '').trim();
@@ -171,10 +178,10 @@ function listIOSDevices(showDetails: boolean): {
         const deviceIds = execCommand('idevice_id -l')
           .trim()
           .split('\n')
-          .filter((id) => id.trim());
+          .filter(id => id.trim());
 
         for (const deviceId of deviceIds) {
-          const device = physicalDevices.find((d) => d.id.includes(deviceId));
+          const device = physicalDevices.find(d => d.id.includes(deviceId));
           if (device) {
             try {
               device.details = {
@@ -206,7 +213,7 @@ function listIOSDevices(showDetails: boolean): {
 
     return { physical: physicalDevices, simulators };
   } catch {
-    console.error(chalk.red('❌ Failed to list iOS devices'));
+    logError('❌ Failed to list iOS devices');
     return { physical: [], simulators: [] };
   }
 }
@@ -215,17 +222,17 @@ function printAndroidDevices(
   devices: DeviceInfo[],
   showDetails: boolean
 ): void {
-  console.log(chalk.blue('========================================'));
-  console.log(chalk.blue('      CONNECTED ANDROID DEVICES'));
-  console.log(chalk.blue('========================================'));
+  logHeader('========================================');
+  logHeader('      CONNECTED ANDROID DEVICES');
+  logHeader('========================================');
 
   if (devices.length === 0) {
-    console.log(chalk.yellow('No Android devices connected.'));
+    logWarning('No Android devices connected.');
     return;
   }
 
-  console.log(chalk.white('DEVICE ID                       STATUS'));
-  console.log(chalk.gray('--------------------------------------'));
+  console.log('DEVICE ID                       STATUS');
+  logGray('--------------------------------------');
 
   for (const device of devices) {
     const statusColor = device.status === 'device' ? chalk.green : chalk.yellow;
@@ -234,11 +241,11 @@ function printAndroidDevices(
     );
 
     if (showDetails && device.details) {
-      console.log(chalk.gray(`  • Model:     ${device.details.model}`));
-      console.log(chalk.gray(`  • Android:   ${device.details.android}`));
-      console.log(chalk.gray(`  • API Level: ${device.details.apiLevel}`));
-      console.log(chalk.gray(`  • Brand:     ${device.details.brand}`));
-      console.log(chalk.gray(`  • Device:    ${device.details.device}`));
+      logGray(`  • Model:     ${device.details.model}`);
+      logGray(`  • Android:   ${device.details.android}`);
+      logGray(`  • API Level: ${device.details.apiLevel}`);
+      logGray(`  • Brand:     ${device.details.brand}`);
+      logGray(`  • Device:    ${device.details.device}`);
       console.log('');
     }
   }
@@ -248,44 +255,36 @@ function printIOSDevices(
   devices: { physical: DeviceInfo[]; simulators: DeviceInfo[] },
   showDetails: boolean
 ): void {
-  console.log(chalk.blue('========================================'));
-  console.log(chalk.blue('        CONNECTED IOS DEVICES'));
-  console.log(chalk.blue('========================================'));
+  logHeader('========================================');
+  logHeader('        CONNECTED IOS DEVICES');
+  logHeader('========================================');
 
   if (devices.physical.length === 0 && devices.simulators.length === 0) {
-    console.log(chalk.yellow('No iOS devices or simulators detected.'));
+    logWarning('No iOS devices or simulators detected.');
     return;
   }
 
   if (devices.physical.length > 0) {
-    console.log(chalk.white('PHYSICAL DEVICES'));
-    console.log(chalk.gray('--------------------------------------'));
+    console.log('PHYSICAL DEVICES');
+    logGray('--------------------------------------');
 
     for (const device of devices.physical) {
       console.log(chalk.cyan(device.id));
 
       if (showDetails && device.details) {
-        console.log(
-          chalk.gray(`  • Product Name:  ${device.details.productName}`)
-        );
-        console.log(
-          chalk.gray(`  • iOS Version:   ${device.details.iosVersion}`)
-        );
-        console.log(
-          chalk.gray(`  • Device Name:   ${device.details.deviceName}`)
-        );
-        console.log(chalk.gray(`  • Model:         ${device.details.model}`));
-        console.log(
-          chalk.gray(`  • Hardware:      ${device.details.hardware}`)
-        );
+        logGray(`  • Product Name:  ${device.details.productName}`);
+        logGray(`  • iOS Version:   ${device.details.iosVersion}`);
+        logGray(`  • Device Name:   ${device.details.deviceName}`);
+        logGray(`  • Model:         ${device.details.model}`);
+        logGray(`  • Hardware:      ${device.details.hardware}`);
         console.log('');
       }
     }
   }
 
   if (devices.simulators.length > 0) {
-    console.log(chalk.white('RUNNING SIMULATORS'));
-    console.log(chalk.gray('--------------------------------------'));
+    console.log('RUNNING SIMULATORS');
+    logGray('--------------------------------------');
 
     for (const device of devices.simulators) {
       console.log(chalk.cyan(device.id));
@@ -297,12 +296,8 @@ function printIOSDevices(
     devices.physical.length > 0 &&
     !checkLibimobiledeviceInstalled()
   ) {
-    console.log(
-      chalk.yellow(
-        '\nFor detailed device information, install libimobiledevice:'
-      )
-    );
-    console.log(chalk.white('  brew install libimobiledevice'));
+    logWarning('\nFor detailed device information, install libimobiledevice:');
+    console.log('  brew install libimobiledevice');
   }
 }
 
@@ -315,7 +310,7 @@ interface DevicesOptions extends ProjectPathOptions {
 async function devicesAction(options: DevicesOptions): Promise<void> {
   const showDetails = options.details || false;
 
-  console.log(chalk.blue('📱 Device Manager\n'));
+  logHeader('📱 Device Manager\n');
 
   if (options.android) {
     const androidDevices = listAndroidDevices(showDetails);
@@ -334,13 +329,9 @@ async function devicesAction(options: DevicesOptions): Promise<void> {
   }
 
   if (showDetails) {
-    console.log(
-      chalk.gray('\n💡 Tip: Run without --details flag for a quick overview')
-    );
+    logGray('\n💡 Tip: Run without --details flag for a quick overview');
   } else {
-    console.log(
-      chalk.gray('\n💡 Tip: Use --details flag for more information')
-    );
+    logGray('\n💡 Tip: Use --details flag for more information');
   }
 }
 
@@ -349,5 +340,8 @@ export const devicesCommand = new Command('devices')
   .option('-d, --details', 'Show detailed device information')
   .option('-a, --android', 'Show Android devices only')
   .option('-i, --ios', 'Show iOS devices only')
-  .option('--destination <path>', 'Project directory path (optional for devices command)')
+  .option(
+    '--destination <path>',
+    'Project directory path (optional for devices command)'
+  )
   .action(devicesAction);

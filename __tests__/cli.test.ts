@@ -8,6 +8,8 @@ import {
   execCommand,
   getTemplateDirectory,
   resolveProjectPath,
+  getProjectName,
+  getProjectInfo,
 } from '../src/utils/index.js';
 
 describe('React Native Boilerplate Ultimate CLI Utils', () => {
@@ -28,7 +30,7 @@ describe('React Native Boilerplate Ultimate CLI Utils', () => {
   describe('CLI Commands', () => {
     const commands = ['init', 'modules', 'icons', 'refresh', 'devices'];
 
-    it.each(commands)('should have %s command available', (command) => {
+    it.each(commands)('should have %s command available', command => {
       expect(command).toBeTruthy();
     });
   });
@@ -43,11 +45,11 @@ describe('React Native Boilerplate Ultimate CLI Utils', () => {
       '',
     ];
 
-    it.each(validNames)('should accept valid project name: %s', (name) => {
+    it.each(validNames)('should accept valid project name: %s', name => {
       expect(validateProjectName(name)).toBe(true);
     });
 
-    it.each(invalidNames)('should reject invalid project name: %s', (name) => {
+    it.each(invalidNames)('should reject invalid project name: %s', name => {
       expect(validateProjectName(name)).toBe(false);
     });
   });
@@ -171,7 +173,7 @@ describe('React Native Boilerplate Ultimate CLI Utils', () => {
       const packageJson = {
         name: 'test-project',
         dependencies: {
-          'express': '^4.0.0',
+          express: '^4.0.0',
         },
       };
       await fs.writeJson(
@@ -188,6 +190,112 @@ describe('React Native Boilerplate Ultimate CLI Utils', () => {
       expect(() => {
         resolveProjectPath({});
       }).toThrow('Not in a React Native project directory');
+    });
+  });
+
+  describe('getProjectName', () => {
+    it('should read project name from app.json displayName', async () => {
+      // Create app.json with displayName
+      const appJson = {
+        name: 'ExApp',
+        displayName: 'MyAwesomeApp',
+        expo: {
+          name: 'MyAwesomeApp',
+        },
+      };
+      await fs.writeJson(path.join(testProjectDir, 'app.json'), appJson);
+
+      const result = getProjectName(testProjectDir);
+      expect(result).toBe('MyAwesomeApp');
+    });
+
+    it('should fallback to app.json name if no displayName', async () => {
+      // Create app.json without displayName
+      const appJson = {
+        name: 'MyProject',
+        expo: {
+          name: 'MyProject',
+        },
+      };
+      await fs.writeJson(path.join(testProjectDir, 'app.json'), appJson);
+
+      const result = getProjectName(testProjectDir);
+      expect(result).toBe('MyProject');
+    });
+
+    it('should fallback to package.json name if no app.json', async () => {
+      // Create only package.json
+      const packageJson = {
+        name: 'fallback-project',
+        dependencies: {
+          'react-native': '^0.70.0',
+        },
+      };
+      await fs.writeJson(
+        path.join(testProjectDir, 'package.json'),
+        packageJson
+      );
+
+      const result = getProjectName(testProjectDir);
+      expect(result).toBe('fallback-project');
+    });
+
+    it('should return ExApp as ultimate fallback', () => {
+      const result = getProjectName('/nonexistent/path');
+      expect(result).toBe('ExApp');
+    });
+
+    it('should verify project name changed after rename simulation', async () => {
+      // Simulate initial state (ExApp)
+      const initialAppJson = {
+        name: 'ExApp',
+        displayName: 'ExApp',
+      };
+      await fs.writeJson(path.join(testProjectDir, 'app.json'), initialAppJson);
+
+      // Verify initial state
+      let projectName = getProjectName(testProjectDir);
+      expect(projectName).toBe('ExApp');
+
+      // Simulate react-native-rename effect by updating app.json
+      const renamedAppJson = {
+        name: 'MyNewApp',
+        displayName: 'MyNewApp',
+      };
+      await fs.writeJson(path.join(testProjectDir, 'app.json'), renamedAppJson);
+
+      // Verify name changed
+      projectName = getProjectName(testProjectDir);
+      expect(projectName).toBe('MyNewApp');
+      expect(projectName).not.toBe('ExApp');
+    });
+  });
+
+  describe('getProjectInfo', () => {
+    it('should reuse getProjectName and return project info', async () => {
+      // Reuse existing test setup
+      const appJson = {
+        name: 'TestProject',
+        displayName: 'My Test Project',
+      };
+      await fs.writeJson(path.join(testProjectDir, 'app.json'), appJson);
+
+      const projectName = getProjectName(testProjectDir);
+      const projectInfo = getProjectInfo(testProjectDir);
+
+      // Should reuse same logic (DRY)
+      expect(projectInfo.name).toBe(projectName);
+      expect(projectInfo.displayName).toBe('My Test Project');
+      expect(projectInfo.iosScheme).toBe(projectName); // Uses same name logic
+    });
+
+    it('should fallback to same behavior as getProjectName', () => {
+      const projectName = getProjectName('/nonexistent/path');
+      const projectInfo = getProjectInfo('/nonexistent/path');
+
+      // Should have same fallback
+      expect(projectInfo.name).toBe(projectName);
+      expect(projectInfo.name).toBe('ExApp');
     });
   });
 });

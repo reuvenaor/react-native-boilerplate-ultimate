@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
@@ -12,15 +11,14 @@ export function findProjectRoot(
   let currentPath = startPath;
 
   while (currentPath !== path.dirname(currentPath)) {
-    const packageJsonPath = path.join(currentPath, 'package.json');
-    if (fs.existsSync(packageJsonPath)) {
-      const packageJson = fs.readJsonSync(packageJsonPath);
-      // Check if it's a React Native project
-      if (
-        packageJson.dependencies?.['react-native'] ||
-        packageJson.devDependencies?.['react-native']
-      ) {
-        return currentPath;
+    if (packageJsonExists(currentPath)) {
+      try {
+        const packageJson = readPackageJson(currentPath);
+        if (isReactNativeProject(packageJson)) {
+          return currentPath;
+        }
+      } catch {
+        // Continue searching if package.json is malformed
       }
     }
     currentPath = path.dirname(currentPath);
@@ -90,17 +88,13 @@ export function resolveProjectPath(options: ProjectPathOptions): string {
     projectPath = path.resolve(options.destination);
 
     // Validate that the destination is a React Native project
-    const packageJsonPath = path.join(projectPath, 'package.json');
-    if (!fs.existsSync(packageJsonPath)) {
+    if (!packageJsonExists(projectPath)) {
       throw new Error(`No package.json found at: ${projectPath}`);
     }
 
     try {
-      const packageJson = fs.readJsonSync(packageJsonPath);
-      if (
-        !packageJson.dependencies?.['react-native'] &&
-        !packageJson.devDependencies?.['react-native']
-      ) {
+      const packageJson = readPackageJson(projectPath);
+      if (!isReactNativeProject(packageJson)) {
         throw new Error(`Not a React Native project: ${projectPath}`);
       }
     } catch (error) {
@@ -122,3 +116,21 @@ export function resolveProjectPath(options: ProjectPathOptions): string {
 
   return projectPath;
 }
+
+export { getProjectName, renameReactNativeApp } from './project-name.js';
+export { getProjectInfo, ProjectInfo } from './project-info.js';
+export { getErrorMessage } from './error-handling.js';
+export {
+  readPackageJson,
+  packageJsonExists,
+  writePackageJson,
+  isReactNativeProject,
+  PackageJson,
+} from './package-utils.js';
+export * from './logging.js';
+
+import {
+  readPackageJson,
+  packageJsonExists,
+  isReactNativeProject,
+} from './package-utils.js';
