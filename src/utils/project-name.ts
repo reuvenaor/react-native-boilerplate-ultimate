@@ -1,10 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { execCommandInteractive } from './index.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export function getProjectName(projectPath: string): string {
   try {
@@ -27,23 +23,16 @@ export async function renameReactNativeApp(
   projectPath: string,
   newName: string
 ): Promise<void> {
-  // Get the path to CLI's react-native-rename binary
-  const cliRootPath = path.resolve(__dirname, '../../');
-  const reactNativeRenamePath = path.join(
-    cliRootPath,
-    'node_modules/.bin/react-native-rename'
-  );
-
-  // Use react-native-rename from CLI dependencies
+  // Use npx to run react-native-rename (it will download automatically if needed)
   try {
     execCommandInteractive(
-      `"${reactNativeRenamePath}" "${newName}" --skipGitStatusCheck --bundleID com.${newName.toLowerCase()}`,
+      `npx react-native-rename "${newName}" --skipGitStatusCheck --bundleID com.${newName.toLowerCase()}`,
       projectPath
     );
   } catch {
     // Fallback: try without bundleID
     execCommandInteractive(
-      `"${reactNativeRenamePath}" "${newName}" --skipGitStatusCheck`,
+      `npx react-native-rename "${newName}" --skipGitStatusCheck`,
       projectPath
     );
   }
