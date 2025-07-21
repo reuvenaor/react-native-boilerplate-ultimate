@@ -1,6 +1,6 @@
 {
   "name": "@reuvenorg/react-native-boilerplate-ultimate",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A powerful CLI tool for creating React Native projects with modular architecture. Generate, manage, and scaffold React Native applications with pre-built modules and best practices.",
   "author": "Reuven Naor",
   "license": "MIT",
