@@ -37,9 +37,9 @@ jobs:
 
       - name: Test CLI
         run: |
-          npx . --help
-          npx . init --help
-          npx . modules --help
-          npx . icons --help
-          npx . devices --help
-          npx . refresh --help
+          npm start -- --help
+          npm start -- init --help
+          npm start -- modules --help
+          npm start -- icons --help
+          npm start -- devices --help
+          npm start -- refresh --help
